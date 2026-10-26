@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thaise Baht Omrekenmachine</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --thai-blue: #1e3a8a;
+            --thai-blue-dark: #172554;
+            --thai-gold: #d97706;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-600: #475569;
+            --slate-800: #1e293b;
+        }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--slate-100);
+            color: var(--slate-800);
+            display: flex;
+            flex-direction: column;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 24px;
+        }
+        button { font-family: inherit; cursor: pointer; }
+
+        /* Header */
+        header {
+            background: linear-gradient(to right, var(--thai-blue), #0c1e4d);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,.18);
+            position: sticky; top: 0; z-index: 40;
+        }
+        .header-inner {
+            max-width: 448px; margin: 0 auto; padding: 12px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-title { display: flex; align-items: center; gap: 8px; }
+        .header-title .flag { font-size: 26px; }
+        .header-title h1 { font-size: 16px; font-weight: 700; line-height: 1.15; }
+        .header-title p { font-size: 11px; color: #bfdbfe; }
+        #open-settings-btn {
+            background: rgba(255,255,255,.1); color: white; border: 1px solid rgba(255,255,255,.25);
+            padding: 8px 12px; border-radius: 12px; font-size: 12px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        #open-settings-btn .icon { color: #fcd34d; }
+
+        /* Layout */
+        main { max-width: 448px; width: 100%; margin: 0 auto; padding: 16px 16px 0; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+        /* Tabs */
+        .tabs {
+            background: var(--slate-200); padding: 4px; border-radius: 16px;
+            display: flex; font-size: 12px; font-weight: 600;
+        }
+        .tabs button {
+            flex: 1; padding: 10px 0; border: none; background: transparent;
+            border-radius: 12px; color: var(--slate-600);
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            transition: all .15s;
+        }
+        .tabs button.active {
+            background: white; color: var(--thai-blue); font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        }
+
+        /* Rate strip */
+        .rate-strip {
+            background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+            padding: 8px 12px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 12px; color: #78350f;
+        }
+        .rate-strip .label { display: flex; align-items: center; gap: 6px; }
+        .rate-strip strong {
+            background: rgba(253,230,138,.6); padding: 2px 8px; border-radius: 6px; font-size: 12px;
+        }
+
+        /* Cards */
+        .card {
+            background: white; border-radius: 24px; padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.06);
+            border: 1px solid rgba(226,232,240,.8);
+        }
+        .card.space { display: flex; flex-direction: column; gap: 16px; }
+        label.field-label {
+            display: block; font-size: 11px; font-weight: 700; color: #64748b;
+            text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
+        }
+        .input-wrap { position: relative; display: flex; align-items: center; }
+        .input-wrap .symbol {
+            position: absolute; left: 16px; font-weight: 700; color: #94a3b8; font-size: 18px; pointer-events: none;
+        }
+        .input-wrap input {
+            width: 100%; background: #f8fafc; border: 2px solid var(--slate-200);
+            border-radius: 16px; padding: 12px 48px 12px 40px;
+            font-size: 24px; font-weight: 700; color: var(--slate-800); outline: none;
+            transition: border-color .15s;
+            font-family: inherit;
+        }
+        .input-wrap input:focus { border-color: var(--thai-blue); background: white; }
+        .input-wrap .clear-btn {
+            position: absolute; right: 12px; width: 28px; height: 28px; border-radius: 50%;
+            background: var(--slate-200); border: none; color: var(--slate-600);
+            font-size: 13px; display: flex; align-items: center; justify-content: center;
+        }
+        .swap-divider { display: flex; justify-content: center; margin: -4px 0; position: relative; z-index: 2; }
+        .swap-divider div {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--thai-blue); color: white; border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,.2);
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+        }
+
+        /* Banknote buttons */
+        .notes-label {
+            font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .notes-label small { font-size: 10px; color: #94a3b8; font-weight: 400; }
+        .notes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .note-btn {
+            border-radius: 12px; padding: 10px 0; font-size: 14px; font-weight: 700;
+            border: 1px solid; display: flex; flex-direction: column; align-items: center;
+            transition: transform .1s;
+        }
+        .note-btn:active { transform: scale(.95); }
+        .note-btn .sub { font-size: 9px; font-weight: 400; }
+        .note-20  { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; } .note-20 .sub  { color: #059669; }
+        .note-50  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; } .note-50 .sub  { color: #2563eb; }
+        .note-100 { background: #fef2f2; border-color: #fecaca; color: #991b1b; } .note-100 .sub { color: #dc2626; }
+        .note-500 { background: #faf5ff; border-color: #e9d5ff; color: #6b21a8; } .note-500 .sub { color: #9333ea; }
+        .note-1000{ background: #fffbeb; border-color: #fde68a; color: #92400e; } .note-1000 .sub{ color: #d97706; }
+
+        /* Rule card */
+        .rule-card {
+            background: linear-gradient(to right, rgba(30,58,138,.05), rgba(245,158,11,.1));
+            border: 1px solid rgba(30,58,138,.15); border-radius: 16px;
+            padding: 14px; display: flex; gap: 12px; align-items: flex-start; font-size: 12px;
+        }
+        .rule-card .icon-box {
+            background: var(--thai-blue); color: white; border-radius: 8px;
+            padding: 8px; flex-shrink: 0; font-size: 14px;
+        }
+        .rule-card b { display: block; margin-bottom: 2px; }
+        .rule-card p { color: var(--slate-600); line-height: 1.6; }
+
+        /* Cheat sheet */
+        .sheet-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .sheet-title small { font-size: 11px; font-weight: 400; color: #64748b; }
+        .sheet-sub { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+        .table-wrap { border-radius: 16px; border: 1px solid var(--slate-200); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        thead th {
+            background: var(--slate-100); color: #475569; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .05em; padding: 10px 16px; text-align: left;
+        }
+        thead th:last-child { text-align: right; }
+        tbody td { padding: 10px 16px; border-top: 1px solid var(--slate-100); font-weight: 500; }
+        tbody td:first-child { font-weight: 700; }
+        tbody td:last-child { text-align: right; font-weight: 700; color: var(--thai-blue); }
+
+        /* Price guide */
+        .section-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .section-title .icon { color: var(--thai-gold); }
+        .price-list { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+        .price-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 10px;
+        }
+        .price-item .left { display: flex; align-items: center; gap: 10px; }
+        .price-item .icon {
+            width: 28px; height: 28px; border-radius: 8px; background: #dbeafe;
+            color: var(--thai-blue); display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+        .price-item .name { font-weight: 500; color: #334155; }
+        .price-item .amounts { text-align: right; }
+        .price-item .amounts .thb { display: block; font-weight: 700; }
+        .price-item .amounts .eur { font-size: 10px; color: #64748b; font-weight: 600; }
+        .tips-list { list-style: none; display: flex; flex-direction: column; gap: 8px; color: #475569; font-size: 12px; }
+        .tips-list li { display: flex; gap: 8px; }
+        .tips-list .check { color: #10b981; flex-shrink: 0; }
+
+        /* Modal */
+        #settings-modal {
+            position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 50;
+            display: none; align-items: flex-end; justify-content: center; padding: 0;
+        }
+        #settings-modal.open { display: flex; }
+        .modal-card {
+            background: white; width: 100%; max-width: 448px;
+            border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,.3);
+        }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px; }
+        .modal-head h3 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .modal-head h3 .icon { color: var(--thai-gold); }
+        #close-settings-btn { background: none; border: none; color: #94a3b8; font-size: 18px; padding: 4px; }
+        .modal-hint { font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 12px; }
+        .rate-input-wrap { position: relative; display: flex; align-items: center; }
+        .rate-input-wrap input {
+            width: 100%; background: #f8fafc; border: 2px solid var(--slate-200); border-radius: 12px;
+            padding: 10px 44px 10px 12px; font-size: 18px; font-weight: 700; outline: none;
+            font-family: inherit;
+        }
+        .rate-input-wrap input:focus { border-color: var(--thai-blue); }
+        .rate-input-wrap span { position: absolute; right: 12px; font-size: 12px; font-weight: 600; color: #94a3b8; }
+        .preset-label { font-size: 11px; font-weight: 600; color: #94a3b8; display: block; margin: 14px 0 6px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .preset-grid button {
+            background: var(--slate-100); border: none; border-radius: 8px;
+            padding: 8px 0; font-size: 12px; font-weight: 500; color: #334155;
+        }
+        #save-rate-btn {
+            width: 100%; background: var(--thai-blue); color: white; border: none;
+            font-weight: 700; padding: 14px 0; border-radius: 12px; font-size: 15px;
+            margin-top: 16px; box-shadow: 0 4px 10px rgba(30,58,138,.3);
+        }
+
+        .hidden { display: none !important; }
+        #section-calc, #section-prices { display: flex; flex-direction: column; gap: 16px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <div class="header-title">
+                <span class="flag">🇹🇭</span>
+                <div>
+                    <h1>Baht ↔ Euro</h1>
+                    <p>Reis-omrekenmachine</p>
+                </div>
+            </div>
+            <button id="open-settings-btn"><span class="icon">⚙️</span><span>Koers</span></button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button id="tab-calc" class="active">🧮 Omrekenen</button>
+            <button id="tab-cheat">📋 Spiekbrief</button>
+            <button id="tab-prices">🍜 Prijzen</button>
+        </div>
+
+        <!-- Rate strip -->
+        <div class="rate-strip">
+            <span class="label">ℹ️ Huidige rekenkoers:</span>
+            <strong id="display-rate">1 EUR = 38.0 THB</strong>
+        </div>
+
+        <!-- TAB 1 -->
+        <section id="section-calc">
+            <div class="card space">
+                <div>
+                    <label class="field-label">Thaise Baht (THB)</label>
+                    <div class="input-wrap">
+                        <span class="symbol">฿</span>
+                        <input type="number" id="input-thb" inputmode="decimal" placeholder="0">
+                        <button class="clear-btn" onclick="clearInputs()">✕</button>
+                    </div>
+                </div>
+                <div class="swap-divider"><div>⇅</div></div>
+                <div>
+                    <label class="field-label">Euro (EUR)</label>
+                    <div class="input-wrap">
+                        <span class="symbol">€</span>
+                        <input type="number" id="input-eur" inputmode="decimal" placeholder="0.00">
+                        <button class="clear-btn" onclick="clearInputs()">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <p class="notes-label"><span>Snel briefgeld optellen (THB):</span><small>Tik om toe te voegen</small></p>
+                <div class="notes-grid">
+                    <button class="note-btn note-20" onclick="addBaht(20)"><span>20</span><span class="sub">฿</span></button>
+                    <button class="note-btn note-50" onclick="addBaht(50)"><span>50</span><span class="sub">฿</span></button>
+                    <button class="note-btn note-100" onclick="addBaht(100)"><span>100</span><span class="sub">฿</span></button>
+                    <button class="note-btn note-500" onclick="addBaht(500)"><span>500</span><span class="sub">฿</span></button>
+                    <button class="note-btn note-1000" onclick="addBaht(1000)"><span>1K</span><span class="sub">฿</span></button>
+                </div>
+            </div>
+
+            <div class="rule-card">
+                <div class="icon-box">⚡</div>
+                <div>
+                    <b>Snelle hoofdrekenregel</b>
+                    <p>Deel het aantal Baht door <strong>40</strong> voor een snelle schatting in Euro's! (bijv. 1.000 THB ÷ 40 = € 25,-).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2 -->
+        <section id="section-cheat" class="hidden">
+            <div class="card">
+                <h2 class="sheet-title"><span>Snelle Omrekentabel</span><small>(Ronde THB Bedragen)</small></h2>
+                <p class="sheet-sub">Gebaseerd op de actieve wisselkoers op jouw telefoon.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Baht (Prijs)</th>
+                                <th>Euro (Kost)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cheat-sheet-rows"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3 -->
+        <section id="section-prices" class="hidden">
+            <div class="card">
+                <h2 class="section-title"><span class="icon">🏷️</span>Wat kost het in Thailand?</h2>
+                <div class="price-list" id="price-guide-list"></div>
+            </div>
+            <div class="card">
+                <h3 class="section-title"><span class="icon">🪙</span>Belangrijke Pintips</h3>
+                <ul class="tips-list">
+                    <li><span class="check">✔</span><span><strong>220 THB Pinkosten:</strong> Elke geldopname bij een ATM kost vast 220 THB (€ 5,80). Pin daarom grotere bedragen per keer.</span></li>
+                    <li><span class="check">✔</span><span><strong>Without Conversion:</strong> Kies bij de ATM altijd voor <em>"Without Conversion"</em> / <em>"Continue without DCC"</em> om de gunstige koers van je eigen bank te krijgen.</span></li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings modal -->
+    <div id="settings-modal">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3><span class="icon">⚙️</span>Wisselkoers Aanpassen</h3>
+                <button id="close-settings-btn">✕</button>
+            </div>
+            <p class="modal-hint">Vul hier de actuele koers in. Standaard is 1 Euro = 38 THB. Dit wordt opgeslagen in je browser.</p>
+            <label class="field-label">1 EUR is gelijk aan hoeveel THB?</label>
+            <div class="rate-input-wrap">
+                <input type="number" id="setting-rate-input" step="0.1" inputmode="decimal">
+                <span>THB</span>
+            </div>
+            <span class="preset-label">Snelkeuze koers:</span>
+            <div class="preset-grid">
+                <button onclick="setQuickRate(37.0)">37.0 THB</button>
+                <button onclick="setQuickRate(38.0)">38.0 THB</button>
+                <button onclick="setQuickRate(39.0)">39.0 THB</button>
+            </div>
+            <button id="save-rate-btn">Opslaan &amp; Toepassen</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRate = 38.0;
+
+        const cheatAmounts = [20, 50, 100, 150, 200, 300, 500, 800, 1000, 1500, 2000, 3000, 5000, 10000];
+
+        const typicalPrices = [
+            { item: "Flesje water (7-Eleven)", thb: 10, icon: "💧" },
+            { item: "IJs-koffie / Boba tea", thb: 40, icon: "🧋" },
+            { item: "Street food (Pad Thai / Rice)", thb: 60, icon: "🍲" },
+            { item: "Vers kokosnoot-sap", thb: 50, icon: "🥥" },
+            { item: "Tuk-Tuk (korte rit)", thb: 100, icon: "🛺" },
+            { item: "Thaise massage (1 uur)", thb: 300, icon: "💆" },
+            { item: "Westers diner in restaurant", thb: 450, icon: "🍽️" }
+        ];
+
+        const inputThb = document.getElementById('input-thb');
+        const inputEur = document.getElementById('input-eur');
+        const displayRate = document.getElementById('display-rate');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingRateInput = document.getElementById('setting-rate-input');
+
+        function loadSavedRate() {
+            try {
+                const savedRate = localStorage.getItem('thb_eur_rate');
+                if (savedRate && !isNaN(savedRate) && Number(savedRate) > 0) {
+                    currentRate = parseFloat(savedRate);
+                }
+            } catch (e) { /* storage not available — use default */ }
+            updateRateDisplay();
+        }
+
+        function updateRateDisplay() {
+            displayRate.innerText = '1 EUR = ' + currentRate.toFixed(1) + ' THB';
+            settingRateInput.value = currentRate;
+        }
+
+        inputThb.addEventListener('input', () => {
+            const val = parseFloat(inputThb.value);
+            inputEur.value = (isNaN(val) || val <= 0) ? '' : (val / currentRate).toFixed(2);
+        });
+
+        inputEur.addEventListener('input', () => {
+            const val = parseFloat(inputEur.value);
+            inputThb.value = (isNaN(val) || val <= 0) ? '' : Math.round(val * currentRate);
+        });
+
+        document.getElementById('open-settings-btn').onclick = () => {
+            settingRateInput.value = currentRate;
+            settingsModal.classList.add('open');
+        };
+        document.getElementById('close-settings-btn').onclick = () => settingsModal.classList.remove('open');
+
+        document.getElementById('save-rate-btn').onclick = () => {
+            const newRate = parseFloat(settingRateInput.value);
+            if (!isNaN(newRate) && newRate > 0) {
+                currentRate = newRate;
+                try { localStorage.setItem('thb_eur_rate', currentRate); } catch (e) {}
+                updateRateDisplay();
+                renderCheatSheet();
+                renderPriceGuide();
+                if (inputThb.value) inputEur.value = (parseFloat(inputThb.value) / currentRate).toFixed(2);
+                settingsModal.classList.remove('open');
+            }
+        };
+
+        function addBaht(amount) {
+            const currentVal = parseFloat(inputThb.value) || 0;
+            const newVal = currentVal + amount;
+            inputThb.value = newVal;
+            inputEur.value = (newVal / currentRate).toFixed(2);
+        }
+
+        function clearInputs() { inputThb.value = ''; inputEur.value = ''; }
+        function setQuickRate(rate) { settingRateInput.value = rate; }
+
+        function switchTab(tab) {
+            ['calc', 'cheat', 'prices'].forEach(t => {
+                document.getElementById('section-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('active');
+            });
+            document.getElementById('section-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+        ['calc', 'cheat', 'prices'].forEach(t => {
+            document.getElementById('tab-' + t).onclick = () => switchTab(t);
+        });
+
+        function renderCheatSheet() {
+            const tbody = document.getElementById('cheat-sheet-rows');
+            tbody.innerHTML = '';
+            cheatAmounts.forEach(thb => {
+                const eur = (thb / currentRate).toFixed(2);
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.textContent = thb.toLocaleString('nl-NL') + ' THB';
+                const td2 = document.createElement('td');
+                td2.textContent = '€ ' + eur;
+                tr.appendChild(td1); tr.appendChild(td2);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPriceGuide() {
+            const container = document.getElementById('price-guide-list');
+            container.innerHTML = '';
+            typicalPrices.forEach(item => {
+                const eur = (item.thb / currentRate).toFixed(2);
+                const div = document.createElement('div');
+                div.className = 'price-item';
+                div.innerHTML =
+                    '<div class="left"><div class="icon">' + item.icon + '</div>' +
+                    '<span class="name">' + item.item + '</span></div>' +
+                    '<div class="amounts"><span class="thb">' + item.thb + ' THB</span>' +
+                    '<span class="eur">≈ € ' + eur + '</span></div>';
+                container.appendChild(div);
+            });
+        }
+
+        loadSavedRate();
+        renderCheatSheet();
+        renderPriceGuide();
+    </script>
+</body>
+</html>
